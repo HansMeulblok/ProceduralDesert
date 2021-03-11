@@ -9,11 +9,11 @@ public class MeshEditor : Editor {
     public override void OnInspectorGUI () {
         DrawDefaultInspector ();
 
-        if (GUILayout.Button ("maak die Mesh bro")) {
+        if (GUILayout.Button ("Generate Mesh")) {
             m_Mesh.StartMeshGeneration ();
         }
 
-        if (GUILayout.Button (" Aelion Erode (" + m_Mesh.NumErosionIterations + " iterations)")) {
+        if (GUILayout.Button ("Aelion Erode (" + m_Mesh.NumErosionIterations + " iterations)")) {
             var sw = new System.Diagnostics.Stopwatch ();
             sw.Start ();
             m_Mesh.Erode ();

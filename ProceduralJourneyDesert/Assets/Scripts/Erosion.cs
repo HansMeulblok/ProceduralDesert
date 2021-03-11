@@ -69,11 +69,14 @@ public class Erosion : MonoBehaviour {
                 HeightAndGradient heightAndGradient = CalculateHeightAndGradient (map, mapSize, posX, posY);
 
                 // Update the droplet's direction and position (move position 1 unit regardless of speed)
-                // dirX = (dirX * inertia - heightAndGradient.gradientX * (1 - inertia));
-                // dirY = (dirY * inertia - heightAndGradient.gradientY * (1 - inertia));
+                // dirX = (dirX * m_Inertia - heightAndGradient.gradientX * (1 - m_Inertia));
+                // dirY = (dirY * m_Inertia - heightAndGradient.gradientY * (1 - m_Inertia));
 
-                dirX = 0.5f;
-                dirY = 0.5f;
+                // dirX = dirX - heightAndGradient.gradientX * (1 - m_Inertia);
+                // dirY = dirY - heightAndGradient.gradientY;
+
+                dirX = 0.5f * m_Inertia - heightAndGradient.gradientX;
+                dirY = 0.5f * m_Inertia - heightAndGradient.gradientY;
                 // Normalize direction
                 float len = Mathf.Sqrt (dirX * dirX + dirY * dirY);
                 if (len != 0) {
@@ -84,6 +87,7 @@ public class Erosion : MonoBehaviour {
                 posY += dirY;
 
                 // Stop simulating droplet if it's not moving or has flowed over edge of map
+                //limit if going to a high pos
                 if ((dirX == 0 && dirY == 0) || posX < 0 || posX >= mapSize - 1 || posY < 0 || posY >= mapSize - 1) {
                     break;
                 }
@@ -96,9 +100,9 @@ public class Erosion : MonoBehaviour {
                 float sedimentCapacity = Mathf.Max (-deltaHeight * speed * water * m_SedimentCapacityFactor, m_MinSedimentCapacity);
 
                 // If carrying more sediment than capacity, or if flowing uphill:
-                if (sediment > sedimentCapacity || deltaHeight > 0) {
+                if (sediment > sedimentCapacity || deltaHeight > 2) {
                     // If moving uphill (deltaHeight > 0) try fill up to the current height, otherwise deposit a fraction of the excess sediment
-                    float amountToDeposit = (deltaHeight > 0) ? Mathf.Min (deltaHeight, sediment) : (sediment - sedimentCapacity) * m_DepositSpeed;
+                    float amountToDeposit = (deltaHeight > 2) ? Mathf.Min (deltaHeight, sediment) : (sediment - sedimentCapacity) * m_DepositSpeed;
                     sediment -= amountToDeposit;
 
                     // Add the sediment to the four nodes of the current cell using bilinear interpolation

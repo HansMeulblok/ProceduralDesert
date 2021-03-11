@@ -4,23 +4,17 @@ Shader "Sand" {
 	{
 		_MainTex ("Albedo (RGB)", 2D) = "white" {}
 
-
-
 		[Space(10)]
 		[Header(Sand)]
 		[Toggle] _SandEnabled("Sand Enabled", Int) = 1
 		_SandTex("Sand Direction (RGB)", 2D) = "white" {}
 		_SandStrength("Sand Strength", Range(0,1)) = 0.1
 
-
-
 		[Space(10)]
 		[Header(Terrain Diffuse)]
 		[Toggle] _DiffuseEnabled("Terrain Diffuse Enabled", Int) = 1
 		_TerrainColor("Terrain Color", Color) = (1,1,1,1)
 		_ShadowColor("Shadow Color", Color) = (1,1,1,1)
-
-
 
 		[Space(10)]
 		[Header(Rim Lighting)]
@@ -29,15 +23,12 @@ Shader "Sand" {
 		_TerrainRimStrength("Terrain Rim Power", Float) = 1
 		_TerrainRimColor("Terrain Rim Color", Color) = (1,1,1,1)
 
-
-
 		[Space(10)]
 		[Header(Ocean Specular)]
 		[Toggle] _OceanSpecularEnabled("Ocean Specular Enabled", Int) = 1
 		_OceanSpecularPower("Ocean Specular Power", Float) = 1
 		_OceanSpecularStrength("Ocean Specular Strengh", Float) = 1
 		_OceanSpecularColor("Ocean Specular Color", Color) = (1,1,1,1)
-
 
 		[Space(10)]
 		[Header(Waves)]
@@ -111,9 +102,8 @@ Shader "Sand" {
 			if (_WavesEnabled == 0)
 				return N;
 
-			// https://unitygem.wordpress.com/shader-part-2/
 			// Converts the current surface normal from TANGENT to WORLD space
-			// This allows us to compare it with UP_WORLD and RIGHT_WORLD
+			// Compare it with UP_WORLD and RIGHT_WORLD
 			float3 N_WORLD = WorldNormalVector(IN, N);
 
 			// Calculates "steepness"
@@ -134,7 +124,7 @@ Shader "Sand" {
 			float xness = abs(dot(N_WORLD, RIGHT_WORLD)) * 2;
 			//return float3(xness, xness, xness);
 
-			// We need to sharpen xness around 0.5
+			// sharpen xness around 0.5
 			xness = xness * 2 - 1; // [0,1]->[-1,+1]
 			//return float3(xness, xness, xness);
 			xness = pow(abs(xness), 1.0 / _XZBlendPower) * sign(xness); // Sharpen around 0.5
@@ -182,7 +172,7 @@ Shader "Sand" {
 			if (_SandEnabled == 0)
 				return N;
 
-			// Random direction
+			// Random direction to bounce light
 			// [0,1]->[-1,+1]
 			float2 uv = W.xz;
 			float3 S = normalize(tex2D(_SandTex, TRANSFORM_TEX(uv, _SandTex)).rgb * 2 - 1);
@@ -207,7 +197,8 @@ Shader "Sand" {
 		//float3 TerrainDiffuse(float3 N, float3 L, float3 V)
 		{
 			float NdotL = saturate(4 * dot(N * float3(1,0.3,1), L));
-
+			
+			// the colours
 			if (_DiffuseEnabled == 0)
 				NdotL = saturate(dot(N, L));
 
@@ -228,13 +219,14 @@ Shader "Sand" {
 		float3 _TerrainRimColor;
 		// N: surface normal
 		// V: view direction
+		//fresnel reflectance model
 		float3 RimLighting(float3 N, float3 V)
 		{
 			if (_RimEnabled == 0)
 				return 0;
 
 			float rim = 1.0 - saturate(dot(N, V));
-			rim = saturate(pow(rim, _TerrainRimPower) * _TerrainRimStrength);
+			rim = saturate(pow(rim, _TerrainRimPower) * _TerrainRimStrength); // control contrast with power and strength
 			rim = max(rim, 0); // Never negative
 			return rim * _TerrainRimColor;
 		}
@@ -259,7 +251,7 @@ Shader "Sand" {
 			if (_OceanSpecularEnabled == 0)
 				return 0;
 
-			// Blinn-Phong
+			// Blinn-Phong method
 			float3 H = normalize(V + L); // Half direction
 			float NdotH = max(0, dot(N, H));
 			float specular = pow(NdotH, _OceanSpecularPower) * _OceanSpecularStrength;
@@ -287,6 +279,7 @@ Shader "Sand" {
 
 			// Random glitter direction
 			// [0,1]->[-1,+1]
+			//sample texture
 			float2 uv = W.xz;
 			float3 G = normalize(tex2D(_GlitterTex, TRANSFORM_TEX(uv, _GlitterTex)).rgb * 2 - 1);
 
@@ -318,16 +311,18 @@ Shader "Sand" {
 			float3 W = worldPos;
 
 
-			// ------------------------------------------
+			// all lighting calculations
 			float3 diffuseColor	= TerrainDiffuse	(N, L);
 			float3 rimColor		= RimLighting		(N, V);
 			float3 oceanColor	= OceanSpecular		(N, L, V);
 			float3 glitterColor	= GlitterSpecular	(N, L, V, W);
 
 
-
+			//combining
 			float3 specularColor = saturate(max(rimColor, oceanColor));
 			float3 color = diffuseColor + specularColor + glitterColor;
+
+			//final colour
 			return float4(color * s.Albedo, 1);
 		}
  
@@ -350,6 +345,7 @@ Shader "Sand" {
 			float3 W = worldPos;
 			float3 N = float3(0, 0, 1); // Normal (in tangent space)
 
+			//bumpmapping
 			N = WavesNormal(W, N, IN);
 			//o.Albedo = N;
 			N = SandNormal (W, N);
