@@ -84,7 +84,6 @@ Material:
         m_Texture: {fileID: 2800000, guid: 82f5dfc93ba98df4e8980a2eb8e8c43b, type: 3}
         m_Scale: {x: 0.5, y: 0.5}
         m_Offset: {x: 0, y: 0}
-    m_Ints: []
     m_Floats:
     - _BumpScale: 1
     - _Cutoff: 0.5
@@ -96,7 +95,7 @@ Material:
     - _GlitterRange: 2.5
     - _GlitterScale: 5
     - _GlitterStrength: 0.157
-    - _GlitterThreshold: 0.91
+    - _GlitterThreshold: 0.887
     - _Glitterness: 5.1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
@@ -111,7 +110,7 @@ Material:
     - _RimEnabled: 1
     - _SandEnabled: 1
     - _SandScale: 100
-    - _SandStrength: 0.04
+    - _SandStrength: 0.085
     - _Shadow: 0.548
     - _SmoothnessTextureChannel: 0
     - _SpecularEnabled: 1
@@ -127,7 +126,7 @@ Material:
     - _TerrainSpecularPower: 318.9
     - _TerrainSpecularStrength: 1.4
     - _UVSec: 0
-    - _WaveBlend: 0.61
+    - _WaveBlend: 0.327
     - _WaveEnabled: 0
     - _WaveScale: 10
     - _WavesEnabled: 1
@@ -142,8 +141,11 @@ Material:
     - _OceanSpecularColor: {r: 1, g: 0.90588236, b: 0.79816514, a: 1}
     - _ShadowColor: {r: 0.73, g: 0.5014396, b: 0.41665095, a: 1}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}
-    - _TerrainColor: {r: 0.8490566, g: 0.6809977, b: 0.58873266, a: 1}
+    - _TerrainColor: {r: 0.8018868, g: 0.6538053, b: 0.5711552, a: 1}
     - _TerrainRimColor: {r: 0.545, g: 0.43700463, b: 0.37672815, a: 1}
     - _TerrainRinColor: {r: 0.3254902, g: 0.32156864, b: 0.31764707, a: 1}
     - _TerrainSpecularColor: {r: 0.85098046, g: 0.68235296, b: 0.5882353, a: 1}
+    - _WaveA: {r: 1, g: 0, b: 0.5, a: 10}
+    - _WaveB: {r: 0, g: 1, b: 0.25, a: 20}
+    - _WaveC: {r: 1, g: 1, b: 0.15, a: 10}
   m_BuildTextureStacks: []

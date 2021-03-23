@@ -4,22 +4,23 @@ public class Erosion : MonoBehaviour {
 
     [SerializeField] private int m_Seed;
     [Range (2, 8)]
-    [SerializeField] private int m_ErosionRadius = 3;
+    [SerializeField] private int m_ErosionRadius = 3; // Radius for how much a particle can affect
     [Range (0, 1)]
-    [SerializeField] private float m_Inertia = .05f; // At zero, water will instantly change direction to flow downhill. At 1, water will never change direction. 
+    [SerializeField] private float m_Inertia = 0.05f; // At zero, particles will instantly change direction to flow downhill. At 1, particles will never change direction. 
     [SerializeField] private float m_SedimentCapacityFactor = 4; // Multiplier for how much sediment a droplet can carry
-    [SerializeField] private float m_MinSedimentCapacity = .01f; // Used to prevent carry capacity getting too close to zero on flatter terrain
+    [SerializeField] private float m_MinSedimentCapacity = 0.01f; // Used to prevent carry capacity getting too close to zero on flatter terrain
     [Range (0, 1)]
-    [SerializeField] private float m_ErodeSpeed = .3f;
+    [SerializeField] private float m_ErodeSpeed = 0.3f; // How much sediment for time spend on a position a particle can take
     [Range (0, 1)]
-    [SerializeField] private float m_DepositSpeed = .3f;
+    [SerializeField] private float m_DepositSpeed = 0.3f; // Amount deposited per update tic if sediment should be dropped
     [Range (0, 1)]
-    [SerializeField] private float m_EvaporateSpeed = .01f;
+    [SerializeField] private float m_DisappearSpeed = 0.01f; // Life span
     [SerializeField] private float m_Gravity = 4;
-    [SerializeField] private int m_MaxDropletLifetime = 30;
+    [SerializeField] private int m_MaxParticleLifetime = 30; // Max life span
 
-    [SerializeField] private float m_InitialWaterVolume = 1;
+    [SerializeField] private float m_InitialVolume = 1;
     [SerializeField] private float m_InitialSpeed = 1;
+    [Range(0, 1)][SerializeField] private float m_Direction = 0.5f;
 
     // Indices and weights of erosion brush precomputed for every node
     int[][] erosionBrushIndices;
@@ -48,88 +49,85 @@ public class Erosion : MonoBehaviour {
         Initialize (mapSize, resetSeed);
 
         for (int iteration = 0; iteration < numIterations; iteration++) {
-            // Create water droplet at random point on map
+            // Create particle at random point on map
             float posX = prng.Next (0, mapSize - 1);
             float posY = prng.Next (0, mapSize - 1);
             float dirX = 0;
             float dirY = 0;
             float speed = m_InitialSpeed;
-            float water = m_InitialWaterVolume;
+            float volume = m_InitialVolume;
             float sediment = 0;
 
-            for (int lifetime = 0; lifetime < m_MaxDropletLifetime; lifetime++) {
+            for (int lifetime = 0; lifetime < m_MaxParticleLifetime; lifetime++) {
                 int nodeX = (int) posX;
                 int nodeY = (int) posY;
-                int dropletIndex = nodeY * mapSize + nodeX;
-                // Calculate droplet's offset inside the cell (0,0) = at NW node, (1,1) = at SE node
+                int particleIndex = nodeY * mapSize + nodeX;
+                // Calculate particles offset inside the cell (0,0) = at NW node, (1,1) = at SE node
                 float cellOffsetX = posX - nodeX;
                 float cellOffsetY = posY - nodeY;
 
-                // Calculate droplet's height and direction of flow with bilinear interpolation of surrounding heights
+                // Calculate particles height and direction of flow with bilinear interpolation of surrounding heights
                 HeightAndGradient heightAndGradient = CalculateHeightAndGradient (map, mapSize, posX, posY);
 
-                // Update the droplet's direction and position (move position 1 unit regardless of speed)
-                // dirX = (dirX * m_Inertia - heightAndGradient.gradientX * (1 - m_Inertia));
-                // dirY = (dirY * m_Inertia - heightAndGradient.gradientY * (1 - m_Inertia));
+                // direction
+                dirX = m_Direction * m_Inertia - heightAndGradient.gradientX;
+                dirY = m_Direction * m_Inertia - heightAndGradient.gradientY;
 
-                // dirX = dirX - heightAndGradient.gradientX * (1 - m_Inertia);
-                // dirY = dirY - heightAndGradient.gradientY;
-
-                dirX = 0.5f * m_Inertia - heightAndGradient.gradientX;
-                dirY = 0.5f * m_Inertia - heightAndGradient.gradientY;
                 // Normalize direction
                 float len = Mathf.Sqrt (dirX * dirX + dirY * dirY);
                 if (len != 0) {
                     dirX /= len;
                     dirY /= len;
                 }
+
+                //move
                 posX += dirX;
                 posY += dirY;
 
-                // Stop simulating droplet if it's not moving or has flowed over edge of map
-                //limit if going to a high pos
+                // Stop simulating particle if it's not moving or has flowed over edge of map
+                // limit if going to a high pos
                 if ((dirX == 0 && dirY == 0) || posX < 0 || posX >= mapSize - 1 || posY < 0 || posY >= mapSize - 1) {
                     break;
                 }
 
-                // Find the droplet's new height and calculate the deltaHeight
+                // Find the particle's new height and calculate the deltaHeight
                 float newHeight = CalculateHeightAndGradient (map, mapSize, posX, posY).height;
                 float deltaHeight = newHeight - heightAndGradient.height;
 
-                // Calculate the droplet's sediment capacity (higher when moving fast down a slope and contains lots of water)
-                float sedimentCapacity = Mathf.Max (-deltaHeight * speed * water * m_SedimentCapacityFactor, m_MinSedimentCapacity);
+                // Calculate the particle's sediment capacity (higher when moving fast down a slope)
+                float sedimentCapacity = Mathf.Max (-deltaHeight * speed * volume * m_SedimentCapacityFactor, m_MinSedimentCapacity);
 
-                // If carrying more sediment than capacity, or if flowing uphill:
+                // If carrying more sediment than capacity, or if going too far uphill:
                 if (sediment > sedimentCapacity || deltaHeight > 2) {
-                    // If moving uphill (deltaHeight > 0) try fill up to the current height, otherwise deposit a fraction of the excess sediment
+                    // If moving too far uphill (deltaHeight > 2) try fill up to the current height, otherwise deposit a fraction of the excess sediment
                     float amountToDeposit = (deltaHeight > 2) ? Mathf.Min (deltaHeight, sediment) : (sediment - sedimentCapacity) * m_DepositSpeed;
                     sediment -= amountToDeposit;
 
                     // Add the sediment to the four nodes of the current cell using bilinear interpolation
                     // Deposition is not distributed over a radius (like erosion) so that it can fill small pits
-                    map[dropletIndex] += amountToDeposit * (1 - cellOffsetX) * (1 - cellOffsetY);
-                    map[dropletIndex + 1] += amountToDeposit * cellOffsetX * (1 - cellOffsetY);
-                    map[dropletIndex + mapSize] += amountToDeposit * (1 - cellOffsetX) * cellOffsetY;
-                    map[dropletIndex + mapSize + 1] += amountToDeposit * cellOffsetX * cellOffsetY;
+                    map[particleIndex] += amountToDeposit * (1 - cellOffsetX) * (1 - cellOffsetY);
+                    map[particleIndex + 1] += amountToDeposit * cellOffsetX * (1 - cellOffsetY);
+                    map[particleIndex + mapSize] += amountToDeposit * (1 - cellOffsetX) * cellOffsetY;
+                    map[particleIndex + mapSize + 1] += amountToDeposit * cellOffsetX * cellOffsetY;
 
                 } else {
-                    // Erode a fraction of the droplet's current carry capacity.
-                    // Clamp the erosion to the change in height so that it doesn't dig a hole in the terrain behind the droplet
+                    // Erode a fraction of the particle's current carry capacity.
+                    // Clamp the erosion to the change in height so that it doesn't dig a hole in the terrain behind the particle
                     float amountToErode = Mathf.Min ((sedimentCapacity - sediment) * m_ErodeSpeed, -deltaHeight);
 
-                    // Use erosion brush to erode from all nodes inside the droplet's erosion radius
-                    for (int brushPointIndex = 0; brushPointIndex < erosionBrushIndices[dropletIndex].Length; brushPointIndex++) {
-                        int nodeIndex = erosionBrushIndices[dropletIndex][brushPointIndex];
-                        float weighedErodeAmount = amountToErode * erosionBrushWeights[dropletIndex][brushPointIndex];
+                    // Use erosion brush to erode from all nodes inside the particle's erosion radius
+                    for (int brushPointIndex = 0; brushPointIndex < erosionBrushIndices[particleIndex].Length; brushPointIndex++) {
+                        int nodeIndex = erosionBrushIndices[particleIndex][brushPointIndex];
+                        float weighedErodeAmount = amountToErode * erosionBrushWeights[particleIndex][brushPointIndex];
                         float deltaSediment = (map[nodeIndex] < weighedErodeAmount) ? map[nodeIndex] : weighedErodeAmount;
                         map[nodeIndex] -= deltaSediment;
                         sediment += deltaSediment;
                     }
                 }
 
-                // Update droplet's speed and water content
+                // Update particle's speed and water content
                 speed = Mathf.Sqrt (speed * speed + deltaHeight * m_Gravity);
-                water *= (1 - m_EvaporateSpeed);
+                volume *= (1 - m_DisappearSpeed);
             }
         }
     }
@@ -138,18 +136,18 @@ public class Erosion : MonoBehaviour {
         int coordX = (int) posX;
         int coordY = (int) posY;
 
-        // Calculate droplet's offset inside the cell (0,0) = at NW node, (1,1) = at SE node
+        // Calculate particle's offset inside the cell (0,0) = at NW node, (1,1) = at SE node
         float x = posX - coordX;
         float y = posY - coordY;
 
-        // Calculate heights of the four nodes of the droplet's cell
+        // Calculate heights of the four nodes of the particle's cell
         int nodeIndexNW = coordY * mapSize + coordX;
         float heightNW = nodes[nodeIndexNW];
         float heightNE = nodes[nodeIndexNW + 1];
         float heightSW = nodes[nodeIndexNW + mapSize];
         float heightSE = nodes[nodeIndexNW + mapSize + 1];
 
-        // Calculate droplet's direction of flow with bilinear interpolation of height difference along the edges
+        // Calculate particle's direction of flow with bilinear interpolation of height difference along the edges
         float gradientX = (heightNE - heightNW) * (1 - y) + (heightSE - heightSW) * y;
         float gradientY = (heightSW - heightNW) * (1 - x) + (heightSE - heightNE) * x;
 

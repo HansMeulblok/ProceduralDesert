@@ -3,9 +3,8 @@
 public class HeightMapGenerator : MonoBehaviour {
     [SerializeField] private int m_Seed;
     [SerializeField] private bool m_RandomizeSeed;
-
     [SerializeField] private int m_NumOctaves = 7; //layers of noise
-    [SerializeField] private float m_Persistence = 0.5f;
+    [SerializeField] private float m_Persistence = 0.5f; // range from 0 to 1, decreases octaves
     [SerializeField] private float m_Lacunarity = 2; //control the rate by which the frequency changes
     [SerializeField] private float m_InitialScale = 2;
 
@@ -27,6 +26,7 @@ public class HeightMapGenerator : MonoBehaviour {
         float minValue = float.MaxValue;
         float maxValue = float.MinValue;
 
+        // use different layers of noise for the height
         for (int y = 0; y < mapSize; y++) {
             for (int x = 0; x < mapSize; x++) {
                 float noiseValue = 0;

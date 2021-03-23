@@ -48,6 +48,12 @@ Shader "Sand" {
 		_GlitterTex("Glitter Direction (R)", 2D) = "white" {}
 		_GlitterThreshold("Glitter Threshold", Range(0,1)) = 1
 		[HDR] _GlitterColor("Glitter Color", Color) = (1,1,1,1)
+
+		[Space(10)]
+		[Header(Waves)]
+		_WaveA ("Wave A (dir, steepness, wavelength)", Vector) = (1,0,0.5,10)
+		_WaveB ("Wave B", Vector) = (0,1,0.25,20)
+		_WaveC ("Wave C", Vector) = (1,1,0.15,10)
 		
 	}
 	SubShader {
@@ -55,7 +61,7 @@ Shader "Sand" {
 		LOD 200
 
 		CGPROGRAM
-		#pragma surface surf Journey fullforwardshadows
+		#pragma surface surf Sand fullforwardshadows
 		#pragma target 4.0
 
 		sampler2D _MainTex;
@@ -73,14 +79,10 @@ Shader "Sand" {
 		// Passed to the lighting function
 		float3 worldPos;
 
-
 		inline float3 normalerp(float3 n1, float3 n2, float t)
 		{
 			return normalize(lerp(n1, n2, t));
 		}
-
-
-
 
 		// ---------------------------------
 		// --- Waves (Details Heightmap)
@@ -93,6 +95,7 @@ Shader "Sand" {
 		sampler2D_float _SteepXTex;		float4 _SteepXTex_ST;
 		sampler2D_float _SteepZTex;		float4 _SteepZTex_ST;
 		float _WaveBlend;
+		// reminders because I forget:
 		// W: world position
 		// N: surface normal
 		// L: light direction
@@ -107,8 +110,8 @@ Shader "Sand" {
 			float3 N_WORLD = WorldNormalVector(IN, N);
 
 			// Calculates "steepness"
-			//  => 0: shallow (flat surface)
-			//  => 1: steep (90 degrees surface)
+			//  0: shallow (flat surface)
+			//  1: steep (90 degrees surface)
 			float3 UP_WORLD = float3(0, 1, 0);
 			float steepness = saturate(dot(N_WORLD, UP_WORLD));
 
@@ -118,8 +121,8 @@ Shader "Sand" {
 
 			// Calculates "xness"
 			// Slopes can be facing X or Z direction
-			//  => 0: slope facing Z
-			//  => 1: slope facing X
+			//  0: slope facing Z
+			//  1: slope facing X
 			float3 RIGHT_WORLD = float3(1, 0, 0);
 			float xness = abs(dot(N_WORLD, RIGHT_WORLD)) * 2;
 			//return float3(xness, xness, xness);
@@ -219,7 +222,7 @@ Shader "Sand" {
 		float3 _TerrainRimColor;
 		// N: surface normal
 		// V: view direction
-		//fresnel reflectance model
+		// fresnel reflectance model
 		float3 RimLighting(float3 N, float3 V)
 		{
 			if (_RimEnabled == 0)
@@ -262,7 +265,7 @@ Shader "Sand" {
 		
 
 		// ---------------------------------
-		// --- Ocean Specular
+		// --- Glitter Specular
 		// ---------------------------------
 		int _GlitterEnabled;
 		sampler2D_float _GlitterTex;
@@ -298,8 +301,14 @@ Shader "Sand" {
 		}
 
 
-
-		inline float4 LightingJourney (SurfaceOutput s, fixed3 viewDir, UnityGI gi)
+		// ---------------------------------
+		// --- Custom Sand Lighting
+		// ---------------------------------
+		// W: world position
+		// N: surface normal
+		// L: light direction
+		// V: view direction
+		inline float4 LightingSand (SurfaceOutput s, fixed3 viewDir, UnityGI gi)
 		{
 			// Original colour
 			//fixed4 pbr = LightingStandard(s, viewDir, gi);
@@ -325,8 +334,10 @@ Shader "Sand" {
 			//final colour
 			return float4(color * s.Albedo, 1);
 		}
+		// ---------------------------------
+
  
-		void LightingJourney_GI(SurfaceOutput s, UnityGIInput data, inout UnityGI gi)
+		void LightingSand_GI(SurfaceOutput s, UnityGIInput data, inout UnityGI gi)
 		{
 			//LightingStandard_GI(s, data, gi); 
 		}
@@ -343,7 +354,7 @@ Shader "Sand" {
 			worldPos = IN.worldPos;
 
 			float3 W = worldPos;
-			float3 N = float3(0, 0, 1); // Normal (in tangent space)
+			float3 N = float3(0, 0, 1); // Normal (in tangent space), change for different effect
 
 			//bumpmapping
 			N = WavesNormal(W, N, IN);
@@ -353,6 +364,8 @@ Shader "Sand" {
 			o.Normal = N;
 			//o.Normal = float3(0, 0, 1);
 		}
+
+	
 		ENDCG
 	}
 	FallBack "Diffuse"

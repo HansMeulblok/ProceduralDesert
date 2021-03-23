@@ -7,12 +7,16 @@ public class MeshEditor : Editor {
     private MeshGenerator m_Mesh;
 
     public override void OnInspectorGUI () {
-        DrawDefaultInspector ();
+        // Here so I don't need to create a new inspector
+        DrawDefaultInspector();
 
+
+        // Button to generate the mesh
         if (GUILayout.Button ("Generate Mesh")) {
             m_Mesh.StartMeshGeneration ();
         }
 
+        // Seperate button to erode the mesh, including a timer
         if (GUILayout.Button ("Aelion Erode (" + m_Mesh.NumErosionIterations + " iterations)")) {
             var sw = new System.Diagnostics.Stopwatch ();
             sw.Start ();
@@ -22,20 +26,6 @@ public class MeshEditor : Editor {
         }
     }
 
-    void OnSceneGUI () {
-        if (m_Mesh.ShowNumIterations) {
-            Handles.BeginGUI ();
-            GUIStyle s = new GUIStyle (EditorStyles.boldLabel);
-            s.fontSize = 40;
-
-            string label = "Erosion iterations: " + m_Mesh.NumAnimatedErosionIterations;
-            Vector2 labelSize = s.CalcSize (new GUIContent (label));
-
-            Rect p = SceneView.currentDrawingSceneView.position;
-            GUI.Label (new Rect (p.width / 2 - labelSize.x / 2, p.height - labelSize.y * 2.5f, labelSize.x, labelSize.y), label, s);
-            Handles.EndGUI ();
-        }
-    }
     void OnEnable () {
         m_Mesh = (MeshGenerator) target;
         Tools.hidden = true;
