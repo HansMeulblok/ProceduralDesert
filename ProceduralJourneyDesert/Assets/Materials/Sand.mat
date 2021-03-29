@@ -95,7 +95,7 @@ Material:
     - _GlitterRange: 2.5
     - _GlitterScale: 5
     - _GlitterStrength: 0.157
-    - _GlitterThreshold: 0.887
+    - _GlitterThreshold: 0.943
     - _Glitterness: 5.1
     - _GlossMapScale: 1
     - _Glossiness: 0.5
@@ -110,7 +110,7 @@ Material:
     - _RimEnabled: 1
     - _SandEnabled: 1
     - _SandScale: 100
-    - _SandStrength: 0.085
+    - _SandStrength: 0.094
     - _Shadow: 0.548
     - _SmoothnessTextureChannel: 0
     - _SpecularEnabled: 1
@@ -119,14 +119,14 @@ Material:
     - _SteepnessBlendPower: 15
     - _SteepnessFactor: 15
     - _SteepnessSharpnessPower: 15
-    - _TerrainRimPower: 11.08
-    - _TerrainRimStrength: 1.67
+    - _TerrainRimPower: 9.8
+    - _TerrainRimStrength: 11.8
     - _TerrainSpecPower: 55.35
     - _TerrainSpecStrength: 1.56
     - _TerrainSpecularPower: 318.9
     - _TerrainSpecularStrength: 1.4
     - _UVSec: 0
-    - _WaveBlend: 0.327
+    - _WaveBlend: 0.431
     - _WaveEnabled: 0
     - _WaveScale: 10
     - _WavesEnabled: 1
@@ -137,7 +137,7 @@ Material:
     m_Colors:
     - _Color: {r: 0.9098039, g: 0.6862745, b: 0.41568628, a: 1}
     - _EmissionColor: {r: 0, g: 0, b: 0, a: 1}
-    - _GlitterColor: {r: 3.137255, g: 3.137255, b: 2.1960785, a: 1}
+    - _GlitterColor: {r: 5.992157, g: 5.992157, b: 4.203922, a: 1}
     - _OceanSpecularColor: {r: 1, g: 0.90588236, b: 0.79816514, a: 1}
     - _ShadowColor: {r: 0.73, g: 0.5014396, b: 0.41665095, a: 1}
     - _SpecColor: {r: 0.2, g: 0.2, b: 0.2, a: 1}

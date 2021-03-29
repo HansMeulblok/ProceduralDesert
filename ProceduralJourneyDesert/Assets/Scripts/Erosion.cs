@@ -125,7 +125,7 @@ public class Erosion : MonoBehaviour {
                     }
                 }
 
-                // Update particle's speed and water content
+                // Update particle's speed and  volume
                 speed = Mathf.Sqrt (speed * speed + deltaHeight * m_Gravity);
                 volume *= (1 - m_DisappearSpeed);
             }
